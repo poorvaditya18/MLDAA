@@ -1,0 +1,127 @@
+{\rtf1\ansi\ansicpg1252\cocoartf2636
+\cocoatextscaling0\cocoaplatform0{\fonttbl\f0\fswiss\fcharset0 Helvetica;}
+{\colortbl;\red255\green255\blue255;}
+{\*\expandedcolortbl;;}
+\paperw11900\paperh16840\margl1440\margr1440\vieww11520\viewh8400\viewkind0
+\pard\tx566\tx1133\tx1700\tx2267\tx2834\tx3401\tx3968\tx4535\tx5102\tx5669\tx6236\tx6803\pardirnatural\partightenfactor0
+
+\f0\fs24 \cf0 #include <p18f4550.h>\
+       \
+#pragma config FOSC     = HS\
+#pragma config WDT      = OFF\
+#pragma config PBADEN   = OFF\
+#pragma config LVP      = OFF\
+\
+//LCD data pins connected to PORTD and control pins connected to PORTE\
+\
+\
+#define en          PORTEbits.RE2      // enable signal\
+#define rw          PORTEbits.RE1      // read/write signal\
+#define rs          PORTEbits.RE0     // register select signal\
+\
+\
+//LCD function definitions\
+\
+void LCD_cmd(unsigned char cmd);\
+void init_LCD(void);\
+void LCD_write(unsigned char data);\
+void LCD_write_string(static char *str);\
+\
+\
+\
+//Function to generate delay\
+void myMsDelay (unsigned int time)\
+\{\
+        unsigned int i, j;\
+        for (i = 0; i < time; i++)\
+                for (j = 0; j < 710; j++);/Calibrated for a 1 ms delay in MPLAB/\
+\}\
+\
+//Function to configure the ports connected to LCD and call functions to initalise, write data and commond to LCD\
+void display_string_LCD(static char *pstring1, static char *pstring2)\
+\{\
+     ADCON1 = 0x0F;        //Configuring the PORTE pins as digital I/O \
+     TRISD = 0x00;         //Configuring PORTD as output\
+     TRISE = 0x00;         //Configuring PORTE as output\
+	\
+    \
+     init_LCD();           // initialization of LCD\
+     myMsDelay(50);       // delay of 50 mili seconds\
+   \
+     LCD_write_string(pstring1);\
+     myMsDelay(15);\
+\
+     \
+\
+\}\
+\
+// Function to initialise the LCD\
+void init_LCD(void)\
+\{\
+    LCD_cmd(0x38);      // initialization of 16X2 LCD in 8bit mode\
+    myMsDelay(15);\
+\
+    LCD_cmd(0x01);      // clear LCD\
+    myMsDelay(15);\
+\
+    LCD_cmd(0x0C);      // cursor off\
+    myMsDelay(15);\
+\
+    LCD_cmd(0x80);      // ---8 go to first line and --0 is for 0th position\
+    myMsDelay(15);\
+\
+            // ---8 go to first line and --0 is for 0th position\
+\
+    return;\
+\}\
+//Function to pass command to the LCD\
+void LCD_cmd(unsigned char cmd)\
+\{\
+    PORTD = cmd;\
+    rs = 0;\
+    rw = 0;\
+    en = 1;\
+    myMsDelay(15);\
+    en = 0;\
+    myMsDelay(15);\
+    return;\
+\}\
+\
+//Function to write data to the LCD\
+void LCD_write(unsigned char data)\
+\{\
+    PORTD = data;\
+    rs = 1;\
+    rw = 0;\
+    en = 1;\
+    myMsDelay(15);\
+    en = 0;\
+    myMsDelay(15);\
+    return ;\
+\}\
+//Function to split the string into individual characters and call the LCD_write function\
+void LCD_write_string(static char *str)   //store address value of the string in pointer *str\
+\{\
+    int i = 0;\
+    while (str[i] != 0)\
+    \{\
+        LCD_write(str[i]);      // sending data on LCD byte by byte\
+        myMsDelay(15);\
+                i++;\
+    \}\
+    return;\
+\}\
+\
+void main(void)\
+\{     \
+        char var1[] = "welcome";\
+        char var2[] = "T";\
+	\
+        init_LCD();\
+        \
+        while (1)\
+        \{\
+        display_string_LCD(var1,var2);\
+        \
+        \}  \
+\}}
